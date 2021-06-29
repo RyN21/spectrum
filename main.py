@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from release import Release
+import requests
+import csv
 
 app = FastAPI()
 
-# in memory database
+# IN MEMORY DATABASE
 db = []
 
 # CREATE RELEASE JSON FROM API REQUEST
@@ -18,20 +19,29 @@ with open('releases.csv', 'w', newline='') as file:
     writer.writerow(['organization', 'labor_hours', 'status', 'licenses', 'date_created'])
 
     for x in releases:
-        licenses = []
-        for l in x['permissions']['licenses']:
-            name = l['name']
-            licenses.append(name)
+        licenses = x['permissions']['licenses'][0]['name'] if  x['permissions']['licenses'] != [] else None
 
         writer.writerow([x['organization'], x['laborHours'], x['status'], licenses, x['date']['created']])
 
+with open('releases.csv', 'r') as file:
+    reader = csv.reader(file)
+    for row in reader:
+        db.append({'organization': row[0],
+                   'total_labor_hours': row[1],
+                   'all_in_production': bool(True if row[2] == "Production" else False),
+                   'licenses': row[3],
+                   'month_created': row[4]
+                   })
+
+
 class Release(BaseModel):
     organization: str
-    release_count: int
-    total_labor_hours: int
-    all_in_production: bool
-    licenses: list
-    most_active_months: list[int] = []
+    labor_hours: int
+    status: str
+    licenses: str
+    date_created: str
+
+
 
 @app.get('/')
 def index():
