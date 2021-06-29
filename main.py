@@ -1,18 +1,24 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from release import Release
 
 app = FastAPI()
 
 # in memory database
 db = []
 
+# CREATE RELEASE JSON FROM API REQUEST
+r = requests.get("https://www.energy.gov/sites/prod/files/2020/12/f81/code-12-15-2020.json")
+json = r.json()
+releases = json["releases"]
+
 class Release(BaseModel):
     organization: str
     release_count: int
     total_labor_hours: int
-    all_in_production: boolean
+    all_in_production: bool
     licenses: list
-    most_active_months: list
+    most_active_months: list[int] = []
 
 @app.get('/')
 def index():
@@ -20,7 +26,7 @@ def index():
 
 @app.get('/releases')
 def get_releases():
-    return db
+    return Release
 
 @app.post('/organizations')
 
