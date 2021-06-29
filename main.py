@@ -6,7 +6,7 @@ app = FastAPI()
 # in memory database
 db = []
 
-class Organizations(BaseModel):
+class Release(BaseModel):
     organization: str
     release_count: int
     total_labor_hours: int
@@ -18,16 +18,21 @@ class Organizations(BaseModel):
 def index():
     return {'key' : 'value'}
 
-@app.get('/organizations')
-def get_organizations():
+@app.get('/releases')
+def get_releases():
     return db
 
 @app.post('/organizations')
 
 
-@app.get('/sort_by/organizations')
-def get_organizations_sorted():
+@app.get('releases/sort_by/organizations')
+def get_releases_sorted_by_organizations():
     return db
 
-# @app.get('/sort_by/')
-# @app.get('/sort_by/')
+@app.get('releases/sort_by/release_count')
+def get_releases_sorted_by_count():
+    return db
+
+@app.get('releases/sort_by/total_labor_hours')
+def get_releases_sorted_by_labor_hours():
+    return db
