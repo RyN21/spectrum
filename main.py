@@ -5,8 +5,6 @@ import csv
 
 app = FastAPI()
 
-# IN MEMORY DATABASE
-db = {}
 
 # CREATE RELEASE JSON FROM API REQUEST
 r = requests.get("https://www.energy.gov/sites/prod/files/2020/12/f81/code-12-15-2020.json")
@@ -22,6 +20,11 @@ with open('releases.csv', 'w', newline='') as file:
         licenses = x['permissions']['licenses'][0]['name'] if  x['permissions']['licenses'] != [] else 'N/A'
 
         writer.writerow([x['organization'], x['laborHours'], x['status'], licenses, x['date']['created']])
+
+
+# FILL DATABASE FROM CSV FILE
+# IN MEMORY DATABASE
+db = {}
 
 with open('releases.csv', 'r') as file:
     reader = csv.reader(file)
@@ -48,29 +51,46 @@ with open('releases.csv', 'r') as file:
                         'licenses': [row[3]],
                         'most_active_months': [int(row[4].split("-")[1])]
                         }
-print(db)
+
+releases = list(db.values())
+# print(sorted_by_organization)
 
 
-
-@app.get('/')
-def index():
-    return {'key' : 'value'}
 
 @app.get('/releases')
 def get_releases():
-    return Release
+    return releases
 
-@app.post('/organizations')
-
-
-@app.get('releases/sort_by/organizations')
+@app.get('/releases/sort_by/organizations')
 def get_releases_sorted_by_organizations():
-    return db
+    sorted_by_organization = sorted(releases, key = lambda item: item['organization'])
+    return sorted_by_organization
 
-@app.get('releases/sort_by/release_count')
+@app.get('/releases/sort_by/release_count/desc')
 def get_releases_sorted_by_count():
-    return db
+    sorted_by_release_count = sorted(releases, key = lambda item: item['release_count'], reverse = True)
+    return sorted_by_release_count
 
-@app.get('releases/sort_by/total_labor_hours')
+@app.get('/releases/sort_by/release_count/asc')
+def get_releases_sorted_by_count():
+    sorted_by_release_count = sorted(releases, key = lambda item: item['release_count'])
+    return sorted_by_release_count
+
+@app.get('/releases/sort_by/total_labor_hours/desc')
 def get_releases_sorted_by_labor_hours():
-    return db
+    sorted_by_labor_hours = sorted(releases, key = lambda item: item['total_labor_hours'], reverse = True)
+    return sorted_by_labor_hours
+
+@app.get('/releases/sort_by/total_labor_hours/asc')
+def get_releases_sorted_by_labor_hours():
+    sorted_by_labor_hours = sorted(releases, key = lambda item: item['total_labor_hours'])
+    return sorted_by_labor_hours
+
+
+
+
+Add a top 3 or 5 to most active months
+Add Restful API that retruns data in CSV format
+Add Readme
+Provide live URL of hosted API
+dockerize API
