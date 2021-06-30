@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from collections import Counter
 import requests
+from fastapi.encoders import jsonable_encoder
 import csv
 
 
@@ -26,6 +28,8 @@ with open('releases.csv', 'w', newline='') as file:
 # IN MEMORY DATABASE
 db = {}
 
+
+
 with open('releases.csv', 'r') as file:
     reader = csv.reader(file)
     next(reader)
@@ -39,7 +43,7 @@ with open('releases.csv', 'r') as file:
             db[row[0]]['licenses'].append(row[3])
             db[row[0]]['licenses'] = list(set(db[row[0]]['licenses']))
             db[row[0]]['most_active_months'].append(int(row[4].split("-")[1]))
-            db[row[0]]['most_active_months'] = list(set(db[row[0]]['most_active_months']))
+            # db[row[0]]['most_active_months'] = list(set(db[row[0]]['most_active_months']))
             db[row[0]]['all_in_production'] = False if 'Development' in db[row[0]]['status'] else True
         else:
             status = row[2]
@@ -53,44 +57,60 @@ with open('releases.csv', 'r') as file:
                         }
 
 releases = list(db.values())
-# print(sorted_by_organization)
+
+# FUNCTION TO RETURN TOP 3 MOST ACTIVE MONTHS AND POP STATUS FROM DICTIONARY
+def most_frequent(List):
+    occurance_count = Counter(List)
+    top3 = occurance_count.most_common(3)
+    return [item[0] for item in top3]
+
+for r in releases:
+    r['most_active_months'] = most_frequent(r['most_active_months'])
+    r.pop("status")
 
 
-
+# API ROUTES
 @app.get('/releases')
 def get_releases():
-    return releases
+    json_object = jsonable_encoder({'organization': releases})
+    return json_object
 
 @app.get('/releases/sort_by/organizations')
 def get_releases_sorted_by_organizations():
     sorted_by_organization = sorted(releases, key = lambda item: item['organization'])
-    return sorted_by_organization
+    json_object = jsonable_encoder({'organization': sorted_by_organization})
+    return json_object
 
 @app.get('/releases/sort_by/release_count/desc')
 def get_releases_sorted_by_count():
     sorted_by_release_count = sorted(releases, key = lambda item: item['release_count'], reverse = True)
-    return sorted_by_release_count
+    json_object = jsonable_encoder({'organization': sorted_by_release_count})
+    return json_object
 
 @app.get('/releases/sort_by/release_count/asc')
 def get_releases_sorted_by_count():
     sorted_by_release_count = sorted(releases, key = lambda item: item['release_count'])
-    return sorted_by_release_count
+    json_object = jsonable_encoder({'organization': sorted_by_release_count})
+    return json_object
 
 @app.get('/releases/sort_by/total_labor_hours/desc')
 def get_releases_sorted_by_labor_hours():
     sorted_by_labor_hours = sorted(releases, key = lambda item: item['total_labor_hours'], reverse = True)
-    return sorted_by_labor_hours
+    json_object = jsonable_encoder({'organization': sorted_by_labor_hours})
+    return json_object
 
 @app.get('/releases/sort_by/total_labor_hours/asc')
 def get_releases_sorted_by_labor_hours():
     sorted_by_labor_hours = sorted(releases, key = lambda item: item['total_labor_hours'])
-    return sorted_by_labor_hours
+    json_object = jsonable_encoder({'organization': sorted_by_labor_hours})
+    return json_object
 
 
 
 
-Add a top 3 or 5 to most active months
-Add Restful API that retruns data in CSV format
-Add Readme
-Provide live URL of hosted API
-dockerize API
+
+# Remove status from json
+# Add Restful API that retruns data in CSV format
+# Add Readme
+# Provide live URL of hosted API
+# dockerize API
