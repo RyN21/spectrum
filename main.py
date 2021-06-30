@@ -1,12 +1,12 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 import requests
 import csv
+
 
 app = FastAPI()
 
 # IN MEMORY DATABASE
-db = []
+db = {}
 
 # CREATE RELEASE JSON FROM API REQUEST
 r = requests.get("https://www.energy.gov/sites/prod/files/2020/12/f81/code-12-15-2020.json")
@@ -19,27 +19,36 @@ with open('releases.csv', 'w', newline='') as file:
     writer.writerow(['organization', 'labor_hours', 'status', 'licenses', 'date_created'])
 
     for x in releases:
-        licenses = x['permissions']['licenses'][0]['name'] if  x['permissions']['licenses'] != [] else None
+        licenses = x['permissions']['licenses'][0]['name'] if  x['permissions']['licenses'] != [] else 'N/A'
 
         writer.writerow([x['organization'], x['laborHours'], x['status'], licenses, x['date']['created']])
 
 with open('releases.csv', 'r') as file:
     reader = csv.reader(file)
+    next(reader)
     for row in reader:
-        db.append({'organization': row[0],
-                   'total_labor_hours': row[1],
-                   'all_in_production': bool(True if row[2] == "Production" else False),
-                   'licenses': row[3],
-                   'month_created': row[4]
-                   })
+        if row[0] in db:
 
-
-class Release(BaseModel):
-    organization: str
-    labor_hours: int
-    status: str
-    licenses: str
-    date_created: str
+            db[row[0]]['release_count'] += 1
+            db[row[0]]['total_labor_hours'] += float(row[1])
+            db[row[0]]['status'].append(row[2])
+            db[row[0]]['status'] = list(set(db[row[0]]['status']))
+            db[row[0]]['licenses'].append(row[3])
+            db[row[0]]['licenses'] = list(set(db[row[0]]['licenses']))
+            db[row[0]]['most_active_months'].append(int(row[4].split("-")[1]))
+            db[row[0]]['most_active_months'] = list(set(db[row[0]]['most_active_months']))
+            db[row[0]]['all_in_production'] = False if 'Development' in db[row[0]]['status'] else True
+        else:
+            status = row[2]
+            db[row[0]] = {'organization': row[0],
+                        'release_count': 1,
+                        'total_labor_hours': float(row[1]),
+                        'status': [row[2]],
+                        'all_in_production': bool(True if status == 'Production' else False),
+                        'licenses': [row[3]],
+                        'most_active_months': [int(row[4].split("-")[1])]
+                        }
+print(db)
 
 
 
