@@ -22,6 +22,10 @@ Once it is up and running, you can make a few different calls to your localhost 
   - http://localhost:8000/releases/sort_by/total_labor_hours/asc : gets all the releases sorted by the total labor hours per organization starting with the least.
   - http://localhost:8000/releases/csv : gets all the release data in csv format and puts in into a table.
 
+FastAPI provides some really helpful tools as well to view and disect the routes. Once the server is running after running `$ hypercorn main:app` you can visit:
+  - http://localhost:8000.docs : Allows the user to test the API calls and the results that it provides and check on the status. 
+  - http://localhost:8000.redocs : Provides the user with some addition information
+
 ## Design and build
 
 Being new to Python and FastAPI, I took the simplist approach and created everytihng on one file, 'main.py'
